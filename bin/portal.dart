@@ -5,7 +5,6 @@ import 'package:portal/core/portal.dart';
 
 void main(List<String> arguments) {
   Portal portal = Portal();
-
   portal.use("/", ProductsAPI());
 
   portal.listen(4200);
