@@ -1,2 +1,3 @@
 # Portal
-An API routing library for Dart
+A dart library for creating API routes using annotations
+
