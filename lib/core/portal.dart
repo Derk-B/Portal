@@ -3,10 +3,14 @@ import 'dart:mirrors';
 
 import 'package:portal/annotations/mappers.dart';
 import 'package:portal/annotations/routing_method.dart';
+import 'package:portal/core/reflection_utils.dart';
 import 'package:portal/core/routing_templates.dart';
+import 'package:portal/route_map/route_map.dart';
 
 class Portal {
   Portal();
+
+  final RouteMap _routeMap = RouteMap();
 
   final Map<String, InstanceMirror> _requestClasses = {};
 
@@ -26,47 +30,35 @@ class Portal {
     };
   }
 
-  _invokeMethodForPath(
-      HttpRequest request, String path, InstanceMirror instanceMirror) {
-    for (MapEntry<Symbol, MethodMirror> entry in instanceMirror.type.instanceMembers.entries) {
-      MethodMirror member = entry.value;
-      if (member.isOperator ||
-          !member.isRegularMethod ||
-          member.owner?.simpleName != instanceMirror.type.simpleName) {
-        continue;
-      }
+  _invokeMethodForPath(HttpRequest request, String path) {
+    RouteHandler? routeHandler = _routeMap.tryFindHandlerForRoute(path);
 
-      RoutingAnnotation routeAnnotation = member.metadata
-          .firstWhere((element) => element.reflectee is RoutingAnnotation)
-          .reflectee as RoutingAnnotation;
-
-      if (routeAnnotation.path == path &&
-          _requestHasCorrectMethod(request, routeAnnotation)) {
-        instanceMirror.invoke(member.simpleName, [request]);
-        return;
-      }
+    if (routeHandler == null) {
+      return404(request);
+      return;
     }
 
-    return404(request);
+    InstanceMirror? instanceMirror = routeHandler.instanceMirror;
+
+    if (!_requestHasCorrectMethod(request, routeHandler.routingAnnotation)) {
+      return405(request);
+      return;
+    }
+
+    instanceMirror.invoke(routeHandler.methodMirror.simpleName, [request]);
   }
 
   use(String path, Object requestClass) {
-    _requestClasses.addEntries({path: reflect(requestClass)}.entries);
+    _routeMap.addClassMethods(path, reflect(requestClass));
   }
 
   listen(int port) async {
     var server = await HttpServer.bind("localhost", port);
 
     await for (HttpRequest request in server) {
-      MapEntry<String, InstanceMirror> requestClass =
-          _getRequestClassForPath(request.uri.toString());
-
       // Only the remaining part of the uri is needed to match with the methods.
       // So the path that was defined for the class that contains routes, is removed from the uri.
-      _invokeMethodForPath(
-          request,
-          request.uri.toString().replaceFirst(requestClass.key, ''),
-          requestClass.value);
+      _invokeMethodForPath(request, request.uri.toString());
     }
   }
 }

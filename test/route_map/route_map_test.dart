@@ -25,12 +25,12 @@ void main() {
   });
 
   test("Return null if route not present in map", () {
-    MethodMirror? methodFromMap = routeMap.tryFindMethodForRoute("/");
+    MethodMirror? methodFromMap = routeMap.tryFindHandlerForRoute("/");
     expect(methodFromMap, equals(null));
   });
 
   test("Should return method for route that exists in the route map", () {
-    MethodMirror? methodFromMap = routeMap.tryFindMethodForRoute("/exists");
+    MethodMirror? methodFromMap = routeMap.tryFindHandlerForRoute("/exists");
     expect(methodFromMap, equals(methodMirror));
   });
 
@@ -38,7 +38,7 @@ void main() {
     String route = "/";
     routeMap.addMethodForRoute(methodMirror, route);
 
-    MethodMirror? methodFromMap = routeMap.tryFindMethodForRoute(route);
+    MethodMirror? methodFromMap = routeMap.tryFindHandlerForRoute(route);
 
     expect(methodFromMap, equals(methodMirror));
   });
@@ -53,7 +53,7 @@ void main() {
 
     routeMap.addMethodForRoute(extraMethod, route);
 
-    MethodMirror? methodFromMap = routeMap.tryFindMethodForRoute(route);
+    MethodMirror? methodFromMap = routeMap.tryFindHandlerForRoute(route);
 
     expect(methodFromMap, equals(extraMethod));
   });

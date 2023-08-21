@@ -1,15 +1,26 @@
 import 'dart:mirrors';
 
+import 'package:portal/annotations/routing_method.dart';
+import 'package:portal/core/reflection_utils.dart';
+
+class RouteHandler {
+  final MethodMirror methodMirror;
+  final InstanceMirror instanceMirror;
+  final RoutingAnnotation routingAnnotation;
+
+  const RouteHandler(this.methodMirror, this.instanceMirror, this.routingAnnotation);
+}
+
 /// A Map that contains all the routes and the corresponding methods that need
 /// to be invoked when a request is made to that route.
 class RouteMap {
-  final Map<String, MethodMirror> routeMap = {};
+  final Map<String, RouteHandler> routeMap = {};
 
   /// Returns the methodMirror for a route.
   ///
   /// If the route is not present in the
   /// [routeMap], this method will return null.
-  MethodMirror? tryFindMethodForRoute(String route) {
+  RouteHandler? tryFindHandlerForRoute(String route) {
     return routeMap[route];
   }
 
@@ -17,8 +28,26 @@ class RouteMap {
   ///
   /// If there the route was already present in the map,
   /// the old route is overwritten.
-  addMethodForRoute(MethodMirror methodMirror, String route) {
-    routeMap.update(route, (value) => methodMirror,
-        ifAbsent: () => methodMirror);
+  addMethodForRoute(MethodMirror methodMirror, InstanceMirror instanceMirror, String route) {
+    RoutingAnnotation? annotation = getRoutingAnnotation(methodMirror);
+
+    if (annotation == null) return;
+
+    RouteHandler routeHandler = RouteHandler(methodMirror, instanceMirror, annotation);
+
+    routeMap.update(route, (value) => routeHandler,
+        ifAbsent: () => routeHandler);
+  }
+
+  /// Adds each routing method of the [instanceMirror] to the [routeMap]
+  addClassMethods(String path, InstanceMirror instanceMirror) {
+    Iterable<MapEntry<Symbol, MethodMirror>> symbolAndMethodEntries =
+        instanceMirror.type.instanceMembers.entries;
+
+    for (MapEntry<Symbol, MethodMirror> entry in symbolAndMethodEntries) {
+      if (!isCustomMethod(entry.value, instanceMirror)) continue;
+
+      addMethodForRoute(entry.value, instanceMirror, path + getPathFromMethodMirror(entry.value));
+    }
   }
 }
