@@ -37,7 +37,8 @@ RoutingAnnotation? getRoutingAnnotation(MethodMirror methodMirror) {
 
 /// Determines if a method contains a RoutingAnnotation
 bool isRoutingMethod(MethodMirror methodMirror) {
-  return methodMirror.metadata.any((element) => element is RoutingAnnotation);
+  return methodMirror.metadata
+      .any((element) => element.reflectee is RoutingAnnotation);
 }
 
 /// Returns the path from the RoutingAnnotation
