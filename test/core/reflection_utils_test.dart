@@ -77,4 +77,13 @@ void main() {
 
     expect(getPathFromMethodMirror(methodMirror), equals("/"));
   });
+
+  test("Should return empty routing path from method without annotation", () {
+    InstanceMirror instanceMirror = reflect(TestClass());
+    MethodMirror methodMirror = instanceMirror.type.instanceMembers.entries
+        .firstWhere((element) => element.key == Symbol("empty"))
+        .value;
+
+    expect(getPathFromMethodMirror(methodMirror), equals(""));
+  });
 }
