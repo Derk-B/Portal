@@ -3,7 +3,6 @@ import 'dart:mirrors';
 
 import 'package:portal/annotations/mappers.dart';
 import 'package:portal/annotations/routing_method.dart';
-import 'package:portal/core/reflection_utils.dart';
 import 'package:portal/core/routing_templates.dart';
 import 'package:portal/route_map/route_map.dart';
 
@@ -11,13 +10,6 @@ class Portal {
   Portal();
 
   final RouteMap _routeMap = RouteMap();
-
-  final Map<String, InstanceMirror> _requestClasses = {};
-
-  MapEntry<String, InstanceMirror> _getRequestClassForPath(String path) {
-    return _requestClasses.entries
-        .firstWhere((entry) => path.startsWith(entry.key));
-  }
 
   _requestHasCorrectMethod(
       HttpRequest request, RoutingAnnotation routingAnnotation) {

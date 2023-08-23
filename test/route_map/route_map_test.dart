@@ -1,10 +1,15 @@
 import 'dart:mirrors';
 
+import 'package:portal/annotations/mappers.dart';
+import 'package:portal/core/reflection_utils.dart';
 import 'package:portal/route_map/route_map.dart';
 import 'package:test/test.dart';
 
 class TestReflectionClass {
+  @GetMapping("/exists")
   methodToBeReflected() {}
+
+  @GetMapping("/extra")
   extraMethod() {}
 }
 
@@ -21,40 +26,42 @@ void main() {
         .first
         .value;
 
-    routeMap.addMethodForRoute(methodMirror, "/exists");
+    String path = getPathFromMethodMirror(methodMirror);
+
+    routeMap.addMethodForRoute(methodMirror, instanceMirror, path);
   });
 
   test("Return null if route not present in map", () {
-    MethodMirror? methodFromMap = routeMap.tryFindHandlerForRoute("/");
-    expect(methodFromMap, equals(null));
+    RouteHandler? handlerFromMap = routeMap.tryFindHandlerForRoute("/");
+    expect(handlerFromMap, equals(null));
   });
 
   test("Should return method for route that exists in the route map", () {
-    MethodMirror? methodFromMap = routeMap.tryFindHandlerForRoute("/exists");
-    expect(methodFromMap, equals(methodMirror));
+    RouteHandler? handlerFromMap = routeMap.tryFindHandlerForRoute("/exists");
+    expect(handlerFromMap?.methodMirror, equals(methodMirror));
   });
 
   test("Should add method to map", () {
     String route = "/";
-    routeMap.addMethodForRoute(methodMirror, route);
+    routeMap.addMethodForRoute(methodMirror, instanceMirror, route);
 
-    MethodMirror? methodFromMap = routeMap.tryFindHandlerForRoute(route);
+    RouteHandler? handlerFromMap = routeMap.tryFindHandlerForRoute(route);
 
-    expect(methodFromMap, equals(methodMirror));
+    expect(handlerFromMap?.methodMirror, equals(methodMirror));
   });
 
   test("Should overwrite existing entry in map", () {
     String route = "/";
-    routeMap.addMethodForRoute(methodMirror, route);
+    routeMap.addMethodForRoute(methodMirror, instanceMirror, route);
 
     MethodMirror extraMethod = instanceMirror.type.instanceMembers.entries
         .firstWhere((element) => element.key == Symbol("extraMethod"))
         .value;
 
-    routeMap.addMethodForRoute(extraMethod, route);
+    routeMap.addMethodForRoute(extraMethod, instanceMirror, route);
 
-    MethodMirror? methodFromMap = routeMap.tryFindHandlerForRoute(route);
+    RouteHandler? handlerFromMap = routeMap.tryFindHandlerForRoute(route);
 
-    expect(methodFromMap, equals(extraMethod));
+    expect(handlerFromMap?.methodMirror, equals(extraMethod));
   });
 }

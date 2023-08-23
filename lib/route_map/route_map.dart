@@ -8,7 +8,8 @@ class RouteHandler {
   final InstanceMirror instanceMirror;
   final RoutingAnnotation routingAnnotation;
 
-  const RouteHandler(this.methodMirror, this.instanceMirror, this.routingAnnotation);
+  const RouteHandler(
+      this.methodMirror, this.instanceMirror, this.routingAnnotation);
 }
 
 /// A Map that contains all the routes and the corresponding methods that need
@@ -16,7 +17,7 @@ class RouteHandler {
 class RouteMap {
   final Map<String, RouteHandler> routeMap = {};
 
-  /// Returns the methodMirror for a route.
+  /// Returns the RouteHandler for a route.
   ///
   /// If the route is not present in the
   /// [routeMap], this method will return null.
@@ -28,12 +29,14 @@ class RouteMap {
   ///
   /// If there the route was already present in the map,
   /// the old route is overwritten.
-  addMethodForRoute(MethodMirror methodMirror, InstanceMirror instanceMirror, String route) {
+  addMethodForRoute(
+      MethodMirror methodMirror, InstanceMirror instanceMirror, String route) {
     RoutingAnnotation? annotation = getRoutingAnnotation(methodMirror);
 
     if (annotation == null) return;
 
-    RouteHandler routeHandler = RouteHandler(methodMirror, instanceMirror, annotation);
+    RouteHandler routeHandler =
+        RouteHandler(methodMirror, instanceMirror, annotation);
 
     routeMap.update(route, (value) => routeHandler,
         ifAbsent: () => routeHandler);
@@ -47,7 +50,8 @@ class RouteMap {
     for (MapEntry<Symbol, MethodMirror> entry in symbolAndMethodEntries) {
       if (!isCustomMethod(entry.value, instanceMirror)) continue;
 
-      addMethodForRoute(entry.value, instanceMirror, path + getPathFromMethodMirror(entry.value));
+      addMethodForRoute(entry.value, instanceMirror,
+          path + getPathFromMethodMirror(entry.value));
     }
   }
 }

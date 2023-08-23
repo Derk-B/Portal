@@ -28,7 +28,10 @@ bool isCustomMethod(MethodMirror methodMirror, InstanceMirror parent) {
 RoutingAnnotation? getRoutingAnnotation(MethodMirror methodMirror) {
   return methodMirror.metadata
       .cast<InstanceMirror?>()
-      .firstWhere((element) => element?.reflectee is RoutingAnnotation, orElse: () => null,)
+      .firstWhere(
+        (element) => element?.reflectee is RoutingAnnotation,
+        orElse: () => null,
+      )
       ?.reflectee as RoutingAnnotation?;
 }
 
@@ -38,14 +41,14 @@ bool isRoutingMethod(MethodMirror methodMirror) {
 }
 
 /// Returns the path from the RoutingAnnotation
-String getPathFromAnnotation(RoutingAnnotation annotation) {
+String _getPathFromAnnotation(RoutingAnnotation annotation) {
   return annotation.path;
 }
 
 String getPathFromMethodMirror(MethodMirror methodMirror) {
   RoutingAnnotation? annotation = getRoutingAnnotation(methodMirror);
 
-  if(annotation == null) return "";
+  if (annotation == null) return "";
 
-  return getPathFromAnnotation(annotation);
+  return _getPathFromAnnotation(annotation);
 }
