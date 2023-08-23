@@ -3,15 +3,31 @@ import 'dart:mirrors';
 
 import 'package:portal/annotations/mappers.dart';
 import 'package:portal/annotations/routing_method.dart';
+import 'package:portal/core/request_handlers/abstract_request_handler.dart';
+import 'package:portal/core/request_handlers/delete_request_handler.dart';
+import 'package:portal/core/request_handlers/get_request_handler.dart';
+import 'package:portal/core/request_handlers/post_request_handler.dart';
+import 'package:portal/core/request_handlers/put_request_handler.dart';
 import 'package:portal/core/routing_templates.dart';
-import 'package:portal/route_map/route_map.dart';
+import 'package:portal/routing/route_handler.dart';
+import 'package:portal/routing/route_map.dart';
 
 class Portal {
   Portal();
 
   final RouteMap _routeMap = RouteMap();
 
-  _requestHasCorrectMethod(
+  AbstractRequestHandler _getRequestHandler(HttpRequest request) {
+    return switch (request.method) {
+      "GET" => GetRequestHandler(),
+      "POST" => PostRequestHandler(),
+      "PUT" => PutRequestHandler(),
+      "DELETE" => DeleteRequestHandler(),
+      _ => throw Exception("Unsupported request method")
+    };
+  }
+
+  bool _requestHasCorrectMethod(
       HttpRequest request, RoutingAnnotation routingAnnotation) {
     return switch (request.method) {
       "GET" => routingAnnotation is GetMapping,
@@ -37,7 +53,9 @@ class Portal {
       return;
     }
 
-    instanceMirror.invoke(routeHandler.methodMirror.simpleName, [request]);
+    AbstractRequestHandler requestHandler = _getRequestHandler(request);
+
+    requestHandler.invoke(request, routeHandler, instanceMirror);
   }
 
   use(String path, Object requestClass) {

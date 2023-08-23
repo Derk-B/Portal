@@ -1,16 +1,8 @@
 import 'dart:mirrors';
 
 import 'package:portal/annotations/routing_method.dart';
-import 'package:portal/core/reflection_utils.dart';
-
-class RouteHandler {
-  final MethodMirror methodMirror;
-  final InstanceMirror instanceMirror;
-  final RoutingAnnotation routingAnnotation;
-
-  const RouteHandler(
-      this.methodMirror, this.instanceMirror, this.routingAnnotation);
-}
+import 'package:portal/utils/reflection_utils.dart';
+import 'package:portal/routing/route_handler.dart';
 
 /// A Map that contains all the routes and the corresponding methods that need
 /// to be invoked when a request is made to that route.

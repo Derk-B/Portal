@@ -1,8 +1,9 @@
 import 'dart:mirrors';
 
 import 'package:portal/annotations/mappers.dart';
-import 'package:portal/core/reflection_utils.dart';
-import 'package:portal/route_map/route_map.dart';
+import 'package:portal/routing/route_handler.dart';
+import 'package:portal/utils/reflection_utils.dart';
+import 'package:portal/routing/route_map.dart';
 import 'package:test/test.dart';
 
 class TestReflectionClass {
