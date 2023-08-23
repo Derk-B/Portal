@@ -11,6 +11,7 @@ import 'package:portal/core/request_handlers/put_request_handler.dart';
 import 'package:portal/core/routing_templates.dart';
 import 'package:portal/routing/route_handler.dart';
 import 'package:portal/routing/route_map.dart';
+import 'package:collection/collection.dart';
 
 class Portal {
   Portal();
@@ -28,28 +29,55 @@ class Portal {
   }
 
   bool _requestHasCorrectMethod(
-      HttpRequest request, RoutingAnnotation routingAnnotation) {
+      HttpRequest request, List<RoutingAnnotation> routingAnnotations) {
     return switch (request.method) {
-      "GET" => routingAnnotation is GetMapping,
-      "POST" => routingAnnotation is PostMapping,
-      "PUT" => routingAnnotation is PutMapping,
-      "DELETE" => routingAnnotation is DeleteMapping,
+      "GET" => routingAnnotations.any(
+          (annotation) => annotation is GetMapping,
+        ),
+      "POST" => routingAnnotations.any(
+          (annotation) => annotation is PostMapping,
+        ),
+      "PUT" => routingAnnotations.any(
+          (annotation) => annotation is PutMapping,
+        ),
+      "DELETE" => routingAnnotations.any(
+          (annotation) => annotation is DeleteMapping,
+        ),
       _ => false
     };
   }
 
+  RouteHandler? _getRouteHandlerForMethod(
+      HttpRequest request, List<RouteHandler?> routeHandlers) {
+    return routeHandlers.firstWhereOrNull((element) =>
+        element?.routingAnnotation.getMethodAsString() == request.method);
+  }
+
   _invokeMethodForPath(HttpRequest request, String path) {
-    RouteHandler? routeHandler = _routeMap.tryFindHandlerForRoute(path);
+    List<RouteHandler?> routeHandlers =
+        _routeMap.tryFindHandlerForRoute(path, request.method);
+
+    if (routeHandlers.isEmpty) {
+      return404(request);
+      return;
+    }
+
+    RouteHandler? routeHandler =
+        _getRouteHandlerForMethod(request, routeHandlers);
 
     if (routeHandler == null) {
-      return404(request);
+      routeHandlers.removeWhere((handler) => handler == null);
+      return405(
+        request,
+        routeHandlers.map((e) => e!.routingAnnotation).toList(),
+      );
       return;
     }
 
     InstanceMirror? instanceMirror = routeHandler.instanceMirror;
 
-    if (!_requestHasCorrectMethod(request, routeHandler.routingAnnotation)) {
-      return405(request);
+    if (!_requestHasCorrectMethod(request, [routeHandler.routingAnnotation])) {
+      return405(request, [routeHandler.routingAnnotation]);
       return;
     }
 

@@ -5,6 +5,9 @@ class GetMapping implements RoutingAnnotation {
 
   @override
   final String path;
+
+  @override
+  String getMethodAsString() => "GET";
 }
 
 class PostMapping implements RoutingAnnotation {
@@ -12,6 +15,9 @@ class PostMapping implements RoutingAnnotation {
 
   @override
   final String path;
+
+  @override
+  String getMethodAsString() => "POST";
 }
 
 class PutMapping implements RoutingAnnotation {
@@ -19,6 +25,9 @@ class PutMapping implements RoutingAnnotation {
 
   @override
   final String path;
+
+  @override
+  String getMethodAsString() => "PUT";
 }
 
 class DeleteMapping implements RoutingAnnotation {
@@ -26,4 +35,7 @@ class DeleteMapping implements RoutingAnnotation {
 
   @override
   final String path;
+
+  @override
+  String getMethodAsString() => "DELETE";
 }
