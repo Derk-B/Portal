@@ -3,70 +3,100 @@ import 'dart:mirrors';
 
 import 'package:portal/annotations/mappers.dart';
 import 'package:portal/annotations/routing_method.dart';
+import 'package:portal/core/request_handlers/abstract_request_handler.dart';
+import 'package:portal/core/request_handlers/delete_request_handler.dart';
+import 'package:portal/core/request_handlers/get_request_handler.dart';
+import 'package:portal/core/request_handlers/post_request_handler.dart';
+import 'package:portal/core/request_handlers/put_request_handler.dart';
 import 'package:portal/core/routing_templates.dart';
+import 'package:portal/routing/route_handler.dart';
+import 'package:portal/routing/route_map.dart';
+import 'package:collection/collection.dart';
 
 class Portal {
   Portal();
 
-  final Map<String, InstanceMirror> _requestClasses = {};
+  final RouteMap _routeMap = RouteMap();
 
-  MapEntry<String, InstanceMirror> _getRequestClassForPath(String path) {
-    return _requestClasses.entries
-        .firstWhere((entry) => path.startsWith(entry.key));
+  AbstractRequestHandler _getRequestHandler(HttpRequest request) {
+    return switch (request.method) {
+      "GET" => GetRequestHandler(),
+      "POST" => PostRequestHandler(),
+      "PUT" => PutRequestHandler(),
+      "DELETE" => DeleteRequestHandler(),
+      _ => throw Exception("Unsupported request method")
+    };
   }
 
-  _requestHasCorrectMethod(
-      HttpRequest request, RoutingAnnotation routingAnnotation) {
+  bool _requestHasCorrectMethod(
+      HttpRequest request, List<RoutingAnnotation> routingAnnotations) {
     return switch (request.method) {
-      "GET" => routingAnnotation is GetMapping,
-      "POST" => routingAnnotation is PostMapping,
-      "PUT" => routingAnnotation is PutMapping,
-      "DELETE" => routingAnnotation is DeleteMapping,
+      "GET" => routingAnnotations.any(
+          (annotation) => annotation is GetMapping,
+        ),
+      "POST" => routingAnnotations.any(
+          (annotation) => annotation is PostMapping,
+        ),
+      "PUT" => routingAnnotations.any(
+          (annotation) => annotation is PutMapping,
+        ),
+      "DELETE" => routingAnnotations.any(
+          (annotation) => annotation is DeleteMapping,
+        ),
       _ => false
     };
   }
 
-  _invokeMethodForPath(
-      HttpRequest request, String path, InstanceMirror instanceMirror) {
-    for (MapEntry<Symbol, MethodMirror> entry in instanceMirror.type.instanceMembers.entries) {
-      MethodMirror member = entry.value;
-      if (member.isOperator ||
-          !member.isRegularMethod ||
-          member.owner?.simpleName != instanceMirror.type.simpleName) {
-        continue;
-      }
+  RouteHandler? _getRouteHandlerForMethod(
+      HttpRequest request, List<RouteHandler?> routeHandlers) {
+    return routeHandlers.firstWhereOrNull((element) =>
+        element?.routingAnnotation.getMethodAsString() == request.method);
+  }
 
-      RoutingAnnotation routeAnnotation = member.metadata
-          .firstWhere((element) => element.reflectee is RoutingAnnotation)
-          .reflectee as RoutingAnnotation;
+  _invokeMethodForPath(HttpRequest request, String path) {
+    List<RouteHandler?> routeHandlers =
+        _routeMap.tryFindHandlerForRoute(path, request.method);
 
-      if (routeAnnotation.path == path &&
-          _requestHasCorrectMethod(request, routeAnnotation)) {
-        instanceMirror.invoke(member.simpleName, [request]);
-        return;
-      }
+    if (routeHandlers.isEmpty) {
+      return404(request);
+      return;
     }
 
-    return404(request);
+    RouteHandler? routeHandler =
+        _getRouteHandlerForMethod(request, routeHandlers);
+
+    if (routeHandler == null) {
+      routeHandlers.removeWhere((handler) => handler == null);
+      return405(
+        request,
+        routeHandlers.map((e) => e!.routingAnnotation).toList(),
+      );
+      return;
+    }
+
+    InstanceMirror? instanceMirror = routeHandler.instanceMirror;
+
+    if (!_requestHasCorrectMethod(request, [routeHandler.routingAnnotation])) {
+      return405(request, [routeHandler.routingAnnotation]);
+      return;
+    }
+
+    AbstractRequestHandler requestHandler = _getRequestHandler(request);
+
+    requestHandler.invoke(request, routeHandler, instanceMirror);
   }
 
   use(String path, Object requestClass) {
-    _requestClasses.addEntries({path: reflect(requestClass)}.entries);
+    _routeMap.addClassMethods(path, reflect(requestClass));
   }
 
   listen(int port) async {
     var server = await HttpServer.bind("localhost", port);
 
     await for (HttpRequest request in server) {
-      MapEntry<String, InstanceMirror> requestClass =
-          _getRequestClassForPath(request.uri.toString());
-
       // Only the remaining part of the uri is needed to match with the methods.
       // So the path that was defined for the class that contains routes, is removed from the uri.
-      _invokeMethodForPath(
-          request,
-          request.uri.toString().replaceFirst(requestClass.key, ''),
-          requestClass.value);
+      _invokeMethodForPath(request, request.uri.toString());
     }
   }
 }
