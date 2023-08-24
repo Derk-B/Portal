@@ -4,10 +4,15 @@ import 'dart:mirrors';
 import 'package:portal/annotations/mappers.dart';
 import 'package:portal/annotations/routing_method.dart';
 import 'package:portal/core/request_handlers/abstract_request_handler.dart';
+import 'package:portal/core/request_handlers/connect_request_handler.dart';
 import 'package:portal/core/request_handlers/delete_request_handler.dart';
 import 'package:portal/core/request_handlers/get_request_handler.dart';
+import 'package:portal/core/request_handlers/head_request_handler.dart';
+import 'package:portal/core/request_handlers/options_request_handler.dart';
+import 'package:portal/core/request_handlers/patch_request_handler.dart';
 import 'package:portal/core/request_handlers/post_request_handler.dart';
 import 'package:portal/core/request_handlers/put_request_handler.dart';
+import 'package:portal/core/request_handlers/trace_request_handler.dart';
 import 'package:portal/core/routing_templates.dart';
 import 'package:portal/routing/route_handler.dart';
 import 'package:portal/routing/route_map.dart';
@@ -24,6 +29,11 @@ class Portal {
       "POST" => PostRequestHandler(),
       "PUT" => PutRequestHandler(),
       "DELETE" => DeleteRequestHandler(),
+      "HEAD" => HeadRequestHandler(),
+      "CONNECT" => ConnectRequestHandler(),
+      "OPTIONS" => OptionsRequestHandler(),
+      "TRACE" => TraceRequestHandler(),
+      "PATCH" => PatchRequestHandler(),
       _ => throw Exception("Unsupported request method")
     };
   }
@@ -42,6 +52,21 @@ class Portal {
         ),
       "DELETE" => routingAnnotations.any(
           (annotation) => annotation is DeleteMapping,
+        ),
+      "HEAD" => routingAnnotations.any(
+          (annotation) => annotation is HeadMapping,
+        ),
+      "CONNECT" => routingAnnotations.any(
+          (annotation) => annotation is ConnectMapping,
+        ),
+      "OPTIONS" => routingAnnotations.any(
+          (annotation) => annotation is OptionsMapping,
+        ),
+      "TRACE" => routingAnnotations.any(
+          (annotation) => annotation is TraceMapping,
+        ),
+      "PATCH" => routingAnnotations.any(
+          (annotation) => annotation is PatchMapping,
         ),
       _ => false
     };
