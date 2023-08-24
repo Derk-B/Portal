@@ -18,6 +18,8 @@ void main() {
   late RouteMap routeMap;
   late MethodMirror methodMirror;
 
+  final String requestMethod = "GET";
+
   InstanceMirror instanceMirror = reflect(TestReflectionClass());
 
   setUp(() {
@@ -33,25 +35,28 @@ void main() {
   });
 
   test("Return null if route not present in map", () {
-    RouteHandler? handlerFromMap = routeMap.tryFindHandlerForRoute("/");
-    expect(handlerFromMap, equals(null));
+    List<RouteHandler?> handlersFromMap =
+        routeMap.tryFindHandlerForRoute("/", requestMethod);
+    expect(handlersFromMap, equals(List.empty()));
   });
 
   test("Should return method for route that exists in the route map", () {
-    RouteHandler? handlerFromMap = routeMap.tryFindHandlerForRoute("/exists");
-    expect(handlerFromMap?.methodMirror, equals(methodMirror));
+    List<RouteHandler?> handlersFromMap =
+        routeMap.tryFindHandlerForRoute("/exists", requestMethod);
+    expect(handlersFromMap.map((e) => e?.methodMirror), equals([methodMirror]));
   });
 
   test("Should add method to map", () {
     String route = "/";
     routeMap.addMethodForRoute(methodMirror, instanceMirror, route);
 
-    RouteHandler? handlerFromMap = routeMap.tryFindHandlerForRoute(route);
+    List<RouteHandler?> handlersFromMap =
+        routeMap.tryFindHandlerForRoute(route, requestMethod);
 
-    expect(handlerFromMap?.methodMirror, equals(methodMirror));
+    expect(handlersFromMap.map((e) => e?.methodMirror), equals([methodMirror]));
   });
 
-  test("Should overwrite existing entry in map", () {
+  test("Should add entry to map and keep old entry as well", () {
     String route = "/";
     routeMap.addMethodForRoute(methodMirror, instanceMirror, route);
 
@@ -61,8 +66,10 @@ void main() {
 
     routeMap.addMethodForRoute(extraMethod, instanceMirror, route);
 
-    RouteHandler? handlerFromMap = routeMap.tryFindHandlerForRoute(route);
+    List<RouteHandler?> handlersFromMap =
+        routeMap.tryFindHandlerForRoute(route, requestMethod);
 
-    expect(handlerFromMap?.methodMirror, equals(extraMethod));
+    expect(handlersFromMap.map((e) => e?.methodMirror),
+        equals([methodMirror, extraMethod]));
   });
 }
