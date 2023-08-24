@@ -115,8 +115,8 @@ class Portal {
     _routeMap.addClassMethods(path, reflect(requestClass));
   }
 
-  listen(int port) async {
-    var server = await HttpServer.bind("localhost", port);
+  listen(String address, int port) async {
+    var server = await HttpServer.bind(address, port);
 
     await for (HttpRequest request in server) {
       // Only the remaining part of the uri is needed to match with the methods.

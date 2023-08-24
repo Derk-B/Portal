@@ -7,7 +7,7 @@ void main(List<String> arguments) {
   Portal portal = Portal();
   portal.use("/", ProductsAPI());
 
-  portal.listen(4200);
+  portal.listen("localhost", 4200);
 }
 
 class ProductsAPI {
