@@ -82,3 +82,82 @@ class ProductsAPI {
 ```
 
 If you now visit `http://localhost:8080/products` inside your browser, it should return some plain text saying: `[product1, product2]`
+
+### Adding middleware
+
+You can add your own middleware functions to routes.
+You do this by creating a class that extends the `MiddlewareAnnotation` class.
+
+Example for a Logger class that logs the method of a request:
+```dart
+class Logger extends MiddlewareAnnotation {
+  const Logger();
+
+  @override
+  Middleware<HttpRequest?> process(Function(HttpRequest?) func) {
+    return Middleware((req) {
+      print(req?.method);
+      return func(req);
+    });
+  }
+}
+```
+
+You can then use this middleware in your Portal code:
+```dart
+  @Logger()
+  @GetMapping("products")
+  void getProducts(HttpRequest request) {
+    print("Getting products");
+    request.response
+      ..statusCode = HttpStatus.ok
+      ..write("Success")
+      ..close();
+  }
+```
+
+If you now make a request to a the route `products`, Portal will print in your terminal: `"GET"`
+
+Another example of middleware, this time for protecting routes with authentication:
+
+```dart
+class Authenticated extends MiddlewareAnnotation {
+  const Authenticated();
+
+  bool _checkIfAuthenticated(HttpRequest? req) {
+    return false;
+  }
+
+  @override
+  Middleware<HttpRequest?> process(Function(HttpRequest?) func) {
+    return Middleware((r) {
+      bool isAuthenticated = _checkIfAuthenticated(r);
+      if (!isAuthenticated) {
+        r!.response
+          ..statusCode = HttpStatus.unauthorized
+          ..write("Error: not authenticated")
+          ..close();
+        return null;
+      } else {
+        return func(r);
+      }
+    });
+  }
+}
+
+class ProductsAPI {
+  @Authenticated()
+  @Logger()
+  @GetMapping("products")
+  void getProducts(HttpRequest request) {
+    request.response
+      ..statusCode = HttpStatus.ok
+      ..write("Success")
+      ..close();
+  }
+}
+```
+
+If you navigate in the browser to the `products` route, you will see: 'Error: not authenticated'.
+
+All examples can be found in `bin/portal.dart`

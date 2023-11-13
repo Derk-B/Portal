@@ -35,7 +35,6 @@ class RouteMap {
         .whereNotNull();
 
     Middleware<HttpRequest?> middleware = Middleware((req) {
-      print("req");
       return req;
     });
 
@@ -56,7 +55,6 @@ class RouteMap {
 
     if (routingAnnotation == null) return;
 
-    print("Creating middleware");
     Middleware<HttpRequest?> middleWare = _createMiddleWare(methodMirror);
 
     RouteHandler routeHandler = RouteHandler(

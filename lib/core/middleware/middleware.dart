@@ -12,25 +12,6 @@ class Middleware<T> {
   }
 
   T execute(T input) {
-    print('executing');
     return _value(input);
   }
-}
-
-void main() {
-  Middleware middleWare = Middleware((str) => print(str));
-
-  middleWare = middleWare
-      .bind((input) => Middleware((str) {
-            print("1");
-            return input("${str}2");
-          }))
-      .bind((x) => Middleware((str) {
-            print("2");
-            return null;
-          }));
-
-  print("executing..");
-  var res = middleWare.execute("test");
-  print(res);
 }
