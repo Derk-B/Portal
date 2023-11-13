@@ -1,19 +1,3 @@
-import 'dart:io';
-
-// typedef Middleware = Handler Function(Handler);
-
-// Middleware createMiddleware(Handler handler) {
-//   return (Handler innerHandler) {
-//     return (handler) {
-//       return handler.
-//     };
-//   };
-// }
-
-// Middleware addMiddleware(Middleware other) {
-//   return (Handler handler) { return other(handler); };
-// }
-
 typedef RequestState = String;
 typedef Handler<T> = Function(T);
 

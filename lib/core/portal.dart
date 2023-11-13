@@ -1,18 +1,8 @@
 import 'dart:io';
 import 'dart:mirrors';
 
-import 'package:portal/annotations/routing/mappers.dart';
 import 'package:portal/annotations/routing/routing_annotation.dart';
-import 'package:portal/core/request_handlers/abstract_request_handler.dart';
-import 'package:portal/core/request_handlers/connect_request_handler.dart';
-import 'package:portal/core/request_handlers/delete_request_handler.dart';
-import 'package:portal/core/request_handlers/get_request_handler.dart';
-import 'package:portal/core/request_handlers/head_request_handler.dart';
-import 'package:portal/core/request_handlers/options_request_handler.dart';
-import 'package:portal/core/request_handlers/patch_request_handler.dart';
-import 'package:portal/core/request_handlers/post_request_handler.dart';
-import 'package:portal/core/request_handlers/put_request_handler.dart';
-import 'package:portal/core/request_handlers/trace_request_handler.dart';
+import 'package:portal/core/request_handlers/request_handlers.dart';
 import 'package:portal/core/routing_templates.dart';
 import 'package:portal/routing/route_handler.dart';
 import 'package:portal/routing/route_map.dart';
@@ -22,21 +12,6 @@ class Portal {
   Portal();
 
   final RouteMap _routeMap = RouteMap();
-
-  AbstractRequestHandler _getRequestHandler(HttpRequest request) {
-    return switch (request.method) {
-      "GET" => GetRequestHandler(),
-      "POST" => PostRequestHandler(),
-      "PUT" => PutRequestHandler(),
-      "DELETE" => DeleteRequestHandler(),
-      "HEAD" => HeadRequestHandler(),
-      "CONNECT" => ConnectRequestHandler(),
-      "OPTIONS" => OptionsRequestHandler(),
-      "TRACE" => TraceRequestHandler(),
-      "PATCH" => PatchRequestHandler(),
-      _ => throw Exception("Unsupported request method")
-    };
-  }
 
   bool _requestHasCorrectMethod(
     HttpRequest request,
@@ -48,23 +23,34 @@ class Portal {
   }
 
   RouteHandler? _getRouteHandlerForMethod(
-      HttpRequest request, List<RouteHandler?> routeHandlers) {
+    HttpRequest request,
+    List<RouteHandler?> routeHandlers,
+  ) {
     return routeHandlers.firstWhereOrNull((element) =>
         element?.routingAnnotation.getMethodAsString() == request.method);
   }
 
+  /// Invoke the method for the path by looking up the correct routeHandler
+  ///
+  /// Also takes care of some errors in 404 and 405 situations
+  ///
+  /// TODO: move errorhandling to somewhere else.
   _invokeMethodForPath(HttpRequest request, String path) {
+    // Get all routeHandlers for this path
     List<RouteHandler?> routeHandlers =
         _routeMap.tryFindHandlerForRoute(path, request.method);
 
+    // Return 404 if there are no handlers for this route.
     if (routeHandlers.isEmpty) {
       return404(request);
       return;
     }
 
+    // Get the routeHandler for this specific type of request.
     RouteHandler? routeHandler =
         _getRouteHandlerForMethod(request, routeHandlers);
 
+    // If there is not routeHandler for this type of request then return 405.
     if (routeHandler == null) {
       routeHandlers.removeWhere((handler) => handler == null);
       return405(
@@ -81,7 +67,8 @@ class Portal {
       return;
     }
 
-    AbstractRequestHandler requestHandler = _getRequestHandler(request);
+    AbstractRequestHandler requestHandler =
+        RequestHandlerFactory.createRequestHandler(request);
 
     requestHandler.invoke(request, routeHandler, instanceMirror);
   }
