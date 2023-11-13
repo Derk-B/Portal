@@ -13,6 +13,7 @@ void main(List<String> arguments) {
 
 class ProductsAPI {
   @Authenticated()
+  @PostMapping("products")
   @GetMapping("products")
   void getProducts(HttpRequest request) {
     print("Getting products");

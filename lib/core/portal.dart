@@ -13,28 +13,20 @@ class Portal {
 
   final RouteMap _routeMap = RouteMap();
 
-  bool _requestHasCorrectMethod(
-    HttpRequest request,
-    List<RoutingAnnotation> routingAnnotations,
-  ) {
-    return routingAnnotations.any(
-      (element) => element.isCorrectMethod(request),
-    );
-  }
-
   RouteHandler? _getRouteHandlerForMethod(
     HttpRequest request,
     List<RouteHandler?> routeHandlers,
   ) {
-    return routeHandlers.firstWhereOrNull((element) =>
-        element?.routingAnnotation.getMethodAsString() == request.method);
+    return routeHandlers.firstWhereOrNull(
+      (element) => element?.routingAnnotation.isCorrectMethod(request) ?? false,
+    );
   }
 
   /// Invoke the method for the path by looking up the correct routeHandler
   ///
   /// Also takes care of some errors in 404 and 405 situations
   ///
-  /// TODO: move errorhandling to somewhere else.
+  /// FIXME: move errorhandling to somewhere else.
   _invokeMethodForPath(HttpRequest request, String path) {
     // Get all routeHandlers for this path
     List<RouteHandler?> routeHandlers =
@@ -60,17 +52,10 @@ class Portal {
       return;
     }
 
-    InstanceMirror? instanceMirror = routeHandler.instanceMirror;
-
-    if (!_requestHasCorrectMethod(request, [routeHandler.routingAnnotation])) {
-      return405(request, [routeHandler.routingAnnotation]);
-      return;
-    }
-
     AbstractRequestHandler requestHandler =
         RequestHandlerFactory.createRequestHandler(request);
 
-    requestHandler.invoke(request, routeHandler, instanceMirror);
+    requestHandler.invoke(request, routeHandler);
   }
 
   /// Generate routes.

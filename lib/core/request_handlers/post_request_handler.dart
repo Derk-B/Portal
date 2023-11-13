@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:mirrors';
 
 import 'package:portal/core/request_handlers/abstract_request_handler.dart';
 import 'package:portal/routing/route_handler.dart';
@@ -9,8 +8,8 @@ class PostRequestHandler implements AbstractRequestHandler {
   void invoke(
     HttpRequest request,
     RouteHandler routeHandler,
-    InstanceMirror instanceMirror,
   ) {
-    instanceMirror.invoke(routeHandler.methodMirror.simpleName, [request]);
+    routeHandler.instanceMirror
+        .invoke(routeHandler.methodMirror.simpleName, [request]);
   }
 }
