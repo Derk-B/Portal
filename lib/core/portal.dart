@@ -39,37 +39,12 @@ class Portal {
   }
 
   bool _requestHasCorrectMethod(
-      HttpRequest request, List<RoutingAnnotation> routingAnnotations) {
-    return switch (request.method) {
-      "GET" => routingAnnotations.any(
-          (annotation) => annotation is GetMapping,
-        ),
-      "POST" => routingAnnotations.any(
-          (annotation) => annotation is PostMapping,
-        ),
-      "PUT" => routingAnnotations.any(
-          (annotation) => annotation is PutMapping,
-        ),
-      "DELETE" => routingAnnotations.any(
-          (annotation) => annotation is DeleteMapping,
-        ),
-      "HEAD" => routingAnnotations.any(
-          (annotation) => annotation is HeadMapping,
-        ),
-      "CONNECT" => routingAnnotations.any(
-          (annotation) => annotation is ConnectMapping,
-        ),
-      "OPTIONS" => routingAnnotations.any(
-          (annotation) => annotation is OptionsMapping,
-        ),
-      "TRACE" => routingAnnotations.any(
-          (annotation) => annotation is TraceMapping,
-        ),
-      "PATCH" => routingAnnotations.any(
-          (annotation) => annotation is PatchMapping,
-        ),
-      _ => false
-    };
+    HttpRequest request,
+    List<RoutingAnnotation> routingAnnotations,
+  ) {
+    return routingAnnotations.any(
+      (element) => element.isCorrectMethod(request),
+    );
   }
 
   RouteHandler? _getRouteHandlerForMethod(
@@ -111,6 +86,10 @@ class Portal {
     requestHandler.invoke(request, routeHandler, instanceMirror);
   }
 
+  /// Generate routes.
+  ///
+  /// Add routes of the [requestClass] to the [_routeMap].
+  /// Add middleware to the roues.
   use(String path, Object requestClass) {
     _routeMap.addClassMethods(path, reflect(requestClass));
   }

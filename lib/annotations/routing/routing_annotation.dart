@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:portal/annotations/annotation.dart';
 
 abstract class RoutingAnnotation extends Annotation {
@@ -5,4 +7,8 @@ abstract class RoutingAnnotation extends Annotation {
   final String path;
 
   String getMethodAsString();
+
+  bool isCorrectMethod(HttpRequest request) {
+    return request.method == getMethodAsString();
+  }
 }

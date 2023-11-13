@@ -1,6 +1,7 @@
 import 'dart:mirrors';
 
 import 'package:portal/annotations/routing/routing_annotation.dart';
+import 'package:portal/core/middleware/middleware.dart';
 import 'package:portal/utils/reflection_utils.dart';
 import 'package:portal/routing/route_handler.dart';
 
@@ -31,8 +32,8 @@ class RouteMap {
 
     if (annotation == null) return;
 
-    RouteHandler routeHandler =
-        RouteHandler(methodMirror, instanceMirror, annotation);
+    RouteHandler routeHandler = RouteHandler(
+        methodMirror, instanceMirror, MiddleWare((str) => str), annotation);
 
     routeMap.update(route, (value) => value + [routeHandler],
         ifAbsent: () => [routeHandler]);
