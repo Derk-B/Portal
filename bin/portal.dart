@@ -1,6 +1,7 @@
 import 'dart:io';
 
-import 'package:portal/annotations/mappers.dart';
+import 'package:portal/annotations/auth/authenticate_annotation.dart';
+import 'package:portal/annotations/routing/mappers.dart';
 import 'package:portal/core/portal.dart';
 
 void main(List<String> arguments) {
@@ -11,6 +12,7 @@ void main(List<String> arguments) {
 }
 
 class ProductsAPI {
+  @Authenticated()
   @GetMapping("products")
   void getProducts(HttpRequest request) {
     print("Getting products");

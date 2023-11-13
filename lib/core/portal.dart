@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'dart:mirrors';
 
-import 'package:portal/annotations/mappers.dart';
-import 'package:portal/annotations/routing_method.dart';
+import 'package:portal/annotations/routing/mappers.dart';
+import 'package:portal/annotations/routing/routing_annotation.dart';
 import 'package:portal/core/request_handlers/abstract_request_handler.dart';
 import 'package:portal/core/request_handlers/connect_request_handler.dart';
 import 'package:portal/core/request_handlers/delete_request_handler.dart';
@@ -124,4 +124,6 @@ class Portal {
       _invokeMethodForPath(request, request.uri.toString());
     }
   }
+
+  addMiddleware() {}
 }

@@ -1,6 +1,6 @@
 import 'dart:mirrors';
 
-import 'package:portal/annotations/routing_method.dart';
+import 'package:portal/annotations/routing/routing_annotation.dart';
 import 'package:portal/utils/reflection_utils.dart';
 import 'package:portal/routing/route_handler.dart';
 

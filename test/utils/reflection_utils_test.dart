@@ -1,6 +1,6 @@
 import 'dart:mirrors';
 
-import 'package:portal/annotations/mappers.dart';
+import 'package:portal/annotations/routing/mappers.dart';
 import 'package:portal/utils/reflection_utils.dart';
 import 'package:test/test.dart';
 

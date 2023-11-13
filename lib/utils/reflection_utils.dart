@@ -1,6 +1,6 @@
 import 'dart:mirrors';
 
-import 'package:portal/annotations/routing_method.dart';
+import 'package:portal/annotations/routing/routing_annotation.dart';
 
 /// Checks if the method is a custom method written by the user and not a
 /// default method like toString or an operator.

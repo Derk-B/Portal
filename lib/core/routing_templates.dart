@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:portal/annotations/routing_method.dart';
+import 'package:portal/annotations/routing/routing_annotation.dart';
 
 return404(HttpRequest request) {
   request.response

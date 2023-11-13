@@ -1,4 +1,4 @@
-import 'package:portal/annotations/routing_method.dart';
+import 'package:portal/annotations/routing/routing_annotation.dart';
 
 class GetMapping implements RoutingAnnotation {
   const GetMapping(this.path);
