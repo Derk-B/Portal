@@ -1,5 +1,8 @@
+import 'dart:io';
 import 'dart:mirrors';
 
+import 'package:collection/collection.dart';
+import 'package:portal/annotations/middleware/middleware_annotation.dart';
 import 'package:portal/annotations/routing/routing_annotation.dart';
 import 'package:portal/core/middleware/middleware.dart';
 import 'package:portal/utils/reflection_utils.dart';
@@ -22,18 +25,46 @@ class RouteMap {
     return routeHandlers;
   }
 
+  /// Creates middleware using all middleware annotations for a method.
+  Middleware<HttpRequest?> _createMiddleWare(MethodMirror methodMirror) {
+    Iterable<MiddlewareAnnotation> middleWareAnnontations = methodMirror
+        .metadata
+        .cast<InstanceMirror?>()
+        .where((element) => element?.reflectee is MiddlewareAnnotation)
+        .map((e) => e?.reflectee as MiddlewareAnnotation?)
+        .whereNotNull();
+
+    Middleware<HttpRequest?> middleware = Middleware((req) {
+      print("req");
+      return req;
+    });
+
+    for (MiddlewareAnnotation annotation in middleWareAnnontations) {
+      middleware = middleware.bind((req) => annotation.process(req));
+    }
+
+    return middleware;
+  }
+
   /// Adds a methodMirror to the [routeMap]
   ///
   /// If there the route was already present in the map,
   /// the old route is overwritten.
-  addMethodForRoute(
+  void addMethodForRoute(
       MethodMirror methodMirror, InstanceMirror instanceMirror, String route) {
-    RoutingAnnotation? annotation = getRoutingAnnotation(methodMirror);
+    RoutingAnnotation? routingAnnotation = getRoutingAnnotation(methodMirror);
 
-    if (annotation == null) return;
+    if (routingAnnotation == null) return;
+
+    print("Creating middleware");
+    Middleware<HttpRequest?> middleWare = _createMiddleWare(methodMirror);
 
     RouteHandler routeHandler = RouteHandler(
-        methodMirror, instanceMirror, MiddleWare((str) => str), annotation);
+      methodMirror,
+      instanceMirror,
+      middleWare,
+      routingAnnotation,
+    );
 
     routeMap.update(route, (value) => value + [routeHandler],
         ifAbsent: () => [routeHandler]);
@@ -44,9 +75,12 @@ class RouteMap {
     Iterable<MapEntry<Symbol, MethodMirror>> symbolAndMethodEntries =
         instanceMirror.type.instanceMembers.entries;
 
-    for (MapEntry<Symbol, MethodMirror> entry in symbolAndMethodEntries) {
-      if (!isCustomMethod(entry.value, instanceMirror)) continue;
+    // Filter for custom annotations
+    Iterable<MapEntry<Symbol, MethodMirror>> customEntries =
+        symbolAndMethodEntries
+            .where((element) => isCustomMethod(element.value, instanceMirror));
 
+    for (MapEntry<Symbol, MethodMirror> entry in customEntries) {
       addMethodForRoute(entry.value, instanceMirror,
           path + getPathFromMethodMirror(entry.value));
     }

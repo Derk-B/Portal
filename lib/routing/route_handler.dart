@@ -7,7 +7,7 @@ import 'package:portal/core/middleware/middleware.dart';
 class RouteHandler {
   final MethodMirror methodMirror;
   final InstanceMirror instanceMirror;
-  final MiddleWare middleWare;
+  final Middleware middleWare;
   final RoutingAnnotation routingAnnotation;
 
   const RouteHandler(

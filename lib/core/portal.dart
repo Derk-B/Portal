@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:mirrors';
 
-import 'package:portal/annotations/routing/routing_annotation.dart';
 import 'package:portal/core/request_handlers/request_handlers.dart';
 import 'package:portal/core/routing_templates.dart';
 import 'package:portal/routing/route_handler.dart';
@@ -42,7 +41,7 @@ class Portal {
     RouteHandler? routeHandler =
         _getRouteHandlerForMethod(request, routeHandlers);
 
-    // If there is not routeHandler for this type of request then return 405.
+    // If there is no routeHandler for this type of request then return 405.
     if (routeHandler == null) {
       routeHandlers.removeWhere((handler) => handler == null);
       return405(
@@ -52,10 +51,16 @@ class Portal {
       return;
     }
 
-    AbstractRequestHandler requestHandler =
-        RequestHandlerFactory.createRequestHandler(request);
+    // Execute middleware functions and returning remaining HttpRequest.
+    HttpRequest? requestAfterMiddleware =
+        routeHandler.middleWare.execute(request);
 
-    requestHandler.invoke(request, routeHandler);
+    if (requestAfterMiddleware == null) return;
+
+    AbstractRequestHandler requestHandler =
+        RequestHandlerFactory.createRequestHandler(requestAfterMiddleware);
+
+    requestHandler.invoke(requestAfterMiddleware, routeHandler);
   }
 
   /// Generate routes.

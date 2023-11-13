@@ -2,25 +2,35 @@ typedef RequestState = String;
 typedef Handler<T> = Function(T);
 
 // Monad structure for the middleware.
-class MiddleWare<T> {
+class Middleware<T> {
   final Handler<T> _value;
 
-  MiddleWare(this._value);
+  Middleware(this._value);
 
-  MiddleWare bind(MiddleWare Function(Handler<T> input) func) {
+  Middleware<T> bind(Middleware<T> Function(Handler<T> input) func) {
     return func(_value);
   }
 
-  void execute(T input) {
-    _value(input);
+  T execute(T input) {
+    print('executing');
+    return _value(input);
   }
 }
 
 void main() {
-  MiddleWare middleWare = MiddleWare((str) => print(str));
+  Middleware middleWare = Middleware((str) => print(str));
 
   middleWare = middleWare
-      .bind((input) => MiddleWare((str) => input("${str}2")))
-      .bind((x) => MiddleWare((str) => x("${str}3")));
-  middleWare.execute("test");
+      .bind((input) => Middleware((str) {
+            print("1");
+            return input("${str}2");
+          }))
+      .bind((x) => Middleware((str) {
+            print("2");
+            return null;
+          }));
+
+  print("executing..");
+  var res = middleWare.execute("test");
+  print(res);
 }

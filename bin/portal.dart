@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:portal/annotations/auth/authenticate_annotation.dart';
+import 'package:portal/annotations/middleware/auth/authenticate_annotation.dart';
 import 'package:portal/annotations/routing/mappers.dart';
 import 'package:portal/core/portal.dart';
 
@@ -8,12 +8,11 @@ void main(List<String> arguments) {
   Portal portal = Portal();
   portal.use("/", ProductsAPI());
 
-  portal.listen("localhost", 4200);
+  portal.listen("localhost", 4201);
 }
 
 class ProductsAPI {
   @Authenticated()
-  @PostMapping("products")
   @GetMapping("products")
   void getProducts(HttpRequest request) {
     print("Getting products");
