@@ -1,0 +1,11 @@
+#!/bin/bash
+
+if [ "$1" == "test" ]
+then
+	dart pub global run coverage:test_with_coverage
+fi
+
+if [ "$1" == "build" ]
+then
+	dart run build_runner build
+fi
